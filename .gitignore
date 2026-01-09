@@ -1,7 +1,2 @@
 *.py[cod]
-*.log
-lmcache_v0.9.1/vllm
-vllm/online/vllm
-ixserver/ixserver
-
 .vscode
