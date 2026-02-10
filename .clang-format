@@ -1,0 +1,8 @@
+---
+# 基础样式，可以选择 LLVM, Google, Chromium, Mozilla, WebKit
+BasedOnStyle: Google
+# 设置每行最大字符限制
+ColumnLimit: 120
+# 针对 CUDA 的特定优化（可选）
+Language: Cpp
+---
