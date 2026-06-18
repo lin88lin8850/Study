@@ -50,7 +50,8 @@ N=256
 K=256
 NUM_ITERATIONS=1
 CHECK_ACC=true
-run_kernel 6 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_6"
+# run_kernel 6 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_6"
+run_kernel 7 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_7"
 # run_kernel 99 $NUM_ITERATIONS $M $N $K $CHECK_ACC "cuBLAS"
 echo "------------------------------"
 
@@ -67,6 +68,7 @@ run_kernel 3 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_3"
 run_kernel 4 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_4"
 run_kernel 5 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_5"
 run_kernel 6 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_6"
+run_kernel 7 $NUM_ITERATIONS $M $N $K $CHECK_ACC "kernel_7"
 run_kernel 99 $NUM_ITERATIONS $M $N $K $CHECK_ACC "cuBLAS"
 echo "------------------------------"
 

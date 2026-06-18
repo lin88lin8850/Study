@@ -147,3 +147,25 @@ kernel_6 在 kernel_5 的基础上，核心改动是把原先 1-stage 预取进�
 kernel_6 没有改变 block tile 形状（`BM=256, BN=256, BK=32`），因此理论计算强度与 kernel_5 一致
 
 因此，kernel_6 的加速主要来自**更强的访存-计算重叠**（降低 global memory latency 暴露），而不是算术强度提升
+
+
+## kernel_7
+
+**关键优化**
+
+kernel_7 在 kernel_6 的基础上，主循环（双缓冲）完全不变，核心改动是把 epilogue 中 **C 的读取和 D 的写回改成向量化合并访问（128-bit `float4`）**：
+
+kernel_6 的 epilogue 使用 `ldmatrix_m16n8_gmem` / `stmatrix_m16n8` 逐个 mma tile 直接与 global memory 交互：
+- 每个线程一次只搬运 1 个 `uint32_t`（4 字节事务），相邻 4 线程之间还要跨整行（stride = N）
+- 访问模式不连续，无法合并（coalescing 差），global memory 事务利用率低
+
+kernel_7 改为「先经 shared memory 中转，再向量化合并访问 global memory」：
+1. **fragment → shared memory 散射**：先把每个 warp 的 mma 累加结果（已乘 `alpha`）写回到一块 `BM × BN` 的 shared memory scratch tile（复用主循环用过的 shared memory）。这一步只在 shared memory 内部进行，没有 global memory 访问，代价很低
+2. **向量化合并读 C / 写 D**：所有线程协作，以 `float4`（128-bit，一次 8 个 half）为粒度，从 global memory 合并读取 C、从 shared memory 读取 `alpha·A·B`，计算 `D = alpha·A·B + beta·C` 后再以 `float4` 合并写回 D
+   - 相邻线程访问相邻 `float4`，达成完全合并访问（coalescing），更接近 cache line / 内存事务粒度
+
+**计算强度**
+
+kernel_7 没有改变 block tile 形状（`BM=256, BN=256, BK=32`），理论计算强度与 kernel_5/kernel_6 一致
+
+kernel_7 的加速来自 **epilogue 阶段 C/D 的 global memory 访问从非合并的 4 字节事务变为合并的 128-bit 事务**，提升了有效内存带宽利用率（对 `beta != 0`、需要读取 C 的场景收益更明显）
